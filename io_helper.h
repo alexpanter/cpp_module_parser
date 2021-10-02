@@ -44,14 +44,14 @@
  * the file.
  */
 typedef enum {
-      LINETYPE_OTHER,
-      LINETYPE_INVALID_MODULE_SYNTAX,
-      LINETYPE_MODULE_DECLARATION,
-      LINETYPE_MODULE_PARTITION_DECLARATION,
-      LINETYPE_EXPORT_DECLARATION,
-      LINETYPE_IMPORT_DECLARATION,
-      LINETYPE_GLOBAL_MODULE_FRAGMENT,
-      LINETYPE_PRIVATE_MODULE_FRAGMENT
+  LINETYPE_OTHER,
+  LINETYPE_INVALID_MODULE_SYNTAX,
+  LINETYPE_MODULE_DECLARATION,
+  LINETYPE_MODULE_PARTITION_DECLARATION,
+  LINETYPE_EXPORT_DECLARATION,
+  LINETYPE_IMPORT_DECLARATION,
+  LINETYPE_GLOBAL_MODULE_FRAGMENT,
+  LINETYPE_PRIVATE_MODULE_FRAGMENT
 } module_linetype_t;
 
 typedef struct {
@@ -63,83 +63,19 @@ typedef struct {
 } module_lineinfo_t;
 
 /*
+ * Initialize a `module_lineinfo_t` struct.
+ */
+void init_lineinfo(module_lineinfo_t* info);
+
+/*
  * Read a line and report type of C++ line.
  */
-void read_line(const char* line,
-	       module_lineinfo_t* info)
-{
-  info->linetype = LINETYPE_INVALID_MODULE_SYNTAX;
-  char* tok = strtok(line, " ");
+void read_line(char* line, module_lineinfo_t* info);
 
-  // If the first token is "module" it is either a global
-  // or private module fragment, or a module declaration.
-  if (strcmp(tok, "module") == 0)
-    {
-      tok = strtok(NULL, " ");
-
-      if (tok == NULL) { return; }
-      else if (strcmp(tok, ";") == 0) {
-	info->linetype = LINETYPE_GLOBAL_MODULE_FRAGMENT;
-	return;
-      }
-      else if (strcmp(tok, ":") == 0) {
-	info->linetype = LINETYPE_PRIVATE_MODULE_FRAGMENT;
-	return;
-      }
-
-      // module declaration, first check module name
-      tok = strtok(NULL, "; ");
-      if (tok == NULL) { return; }
-      info->module_name = strdup(tok);
-
-      tok = strtok(NULL, " ");
-      if (tok == NULL) { return; }
-      else if (strcmp(tok, ";") == 0) {
-	info->linetype = LINETYPE_MODULE_DECLARATION;
-	return;
-      }
-      // check partition name
-      else if (strcmp(tok, ":") == 0) {
-	tok = strtok(NULL, " ");
-	if (tok == NULL) { return; }
-
-	info->module_partition_name = strdup(tok);
-	// TODO: This would be the place to check attr(optional)
-	// TODO: Might also report invalid syntax if semicolon is missing
-	info->linetype = LINETYPE_MODULE_PARTITION_DECLARATION;
-	return;
-      }
-      else if (tok[0] == ':') {
-	// We need to split ':' from the partition name
-	char* ptr = tok[1];
-	if (*ptr == '\0') { return; }
-
-	info->module_partition_name = strdup(ptr);
-	info->linetype = LINETYPE_MODULE_PARTITION_DECLARATION;
-	return;
-      }
-      // TODO: For now we ignore attr(optional)
-      else { return; }
-    }
-  else if (strcmp(tok, "module;") == 0) {
-    info->linetype = LINETYPE_GLOBAL_MODULE_FRAGMENT;
-    return;
-  }
-
-  // If first word is "export" it can be an import declaration,
-  // a module declaration, or an export declaration.
-  else if(strcmp(tok, "export") == 0) {
-    tok = strtok(NULL, " ");
-    if (tok == NULL) { return; }
-
-    if (strcmp(tok, "import") == 0) {
-      tok = strtok(NULL, " ");
-      if (tok == NULL) { return; }
-    }
-  }
-
-}
-
+/*
+ * Get a string representation for a `module_linetype_t`.
+ */
+const char* get_linetype_string(module_linetype_t lt);
 
 
 #endif // IO_HELPER_H

@@ -1,1 +1,5 @@
 main
+GPATH
+GRTAGS
+GTAGS
+test_io_helper

@@ -15,6 +15,7 @@ void testline(const char* line)
   printf("\tpartition-name: \"%s\"\n", info.module_partition_name);
   printf("\theader-name: \"%s\"\n", info.header_name);
 #endif
+  free_lineinfo(&info);
 }
 
 
@@ -30,5 +31,6 @@ int main()
   testline("export module orange:blood_orange;");
   testline("export module orange :blood_orange;");
   testline("export import :blood_orange");
+
   return 0;
 }

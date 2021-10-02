@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char* dup_string(char* str)
+static char* dup_string(char* str)
 {
   size_t len = strlen(str);
   char* mem = malloc(len + 1);
@@ -11,7 +11,7 @@ char* dup_string(char* str)
 }
 
 
-char* dup_string_n(char* str, size_t n)
+static char* dup_string_n(char* str, size_t n)
 {
   // Hmm will this work?
   char* mem = malloc(n + 1);
@@ -29,8 +29,19 @@ void init_lineinfo(module_lineinfo_t* info)
   info->header_name = NULL;
 }
 
+void free_lineinfo(module_lineinfo_t* info)
+{
+  info->linetype = LINETYPE_INVALID_MODULE_SYNTAX;
+  if (info->module_name != NULL) free(info->module_name);
+  if (info->header_name != NULL) free(info->header_name);
+  if (info->module_partition_name != NULL) free(info->module_partition_name);
+  info->module_name = NULL;
+  info->header_name = NULL;
+  info->module_partition_name = NULL;
+}
 
-size_t count_occurences(const char* str, char c)
+/*
+static size_t count_occurences(const char* str, char c)
 {
   size_t cnt = 0;
   char* ptr = (char*)str;
@@ -40,8 +51,9 @@ size_t count_occurences(const char* str, char c)
   }
   return cnt;
 }
+*/
 
-int has_char(const char* str, char c)
+static int has_char(const char* str, char c)
 {
   char* ptr = (char*)str;
   while (*ptr != '\0')

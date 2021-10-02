@@ -68,6 +68,11 @@ typedef struct {
 void init_lineinfo(module_lineinfo_t* info);
 
 /*
+ * Free a `module_lineinfo_t` struct.
+ */
+void free_lineinfo(module_lineinfo_t* info);
+
+/*
  * Read a line and report type of C++ line.
  */
 void read_line(char* line, module_lineinfo_t* info);

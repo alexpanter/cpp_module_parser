@@ -2,6 +2,8 @@
 #define IO_HELPER_H
 
 #include <string.h>
+#include "module_unit.h"
+
 
 /*
  * According to cppreference:
@@ -43,24 +45,38 @@
  * So if we see an export declaration we are done parsing
  * the file.
  */
-typedef enum {
-  LINETYPE_OTHER,
-  LINETYPE_INVALID_MODULE_SYNTAX,
-  LINETYPE_MODULE_DECLARATION,
-  LINETYPE_MODULE_PARTITION_DECLARATION,
-  LINETYPE_EXPORT_DECLARATION,
-  LINETYPE_IMPORT_DECLARATION,
-  LINETYPE_GLOBAL_MODULE_FRAGMENT,
-  LINETYPE_PRIVATE_MODULE_FRAGMENT
+typedef enum
+{
+	LINETYPE_OTHER,
+	LINETYPE_INVALID_MODULE_SYNTAX,
+	LINETYPE_MODULE_DECLARATION,
+	LINETYPE_MODULE_PARTITION_DECLARATION,
+	LINETYPE_EXPORT_DECLARATION,
+	LINETYPE_IMPORT_DECLARATION,
+	LINETYPE_GLOBAL_MODULE_FRAGMENT,
+	LINETYPE_PRIVATE_MODULE_FRAGMENT
 } module_linetype_t;
 
-typedef struct {
-  module_linetype_t linetype;
-  char* module_name;
-  char* module_partition_name;
-  char* header_name;
-  // TODO: attr(optional)
+typedef struct
+{
+	module_linetype_t linetype;
+	char* module_name;
+	char* module_partition_name;
+	char* header_name;
+	// TODO: attr(optional)
 } module_lineinfo_t;
+
+typedef enum
+{
+	IO_READ_STATUS_FILE_NOT_EXISTS,
+	IO_READ_STATUS_NOT_MODULE,
+	// TODO: Does gcc care about module/partition ?
+	IO_READ_STATUS_MODULE,
+	IO_READ_STATUS_MODULE_PARTITION,
+	IO_READ_STATUS_SUCCESS,
+	IO_READ_STATUS_UNSUPPORTED_DECLARATION
+} io_read_status_t;
+
 
 /*
  * Initialize a `module_lineinfo_t` struct.
@@ -75,12 +91,21 @@ void free_lineinfo(module_lineinfo_t* info);
 /*
  * Read a line and report type of C++ line.
  */
-void read_line(char* line, module_lineinfo_t* info);
+void read_line(const char* line, module_lineinfo_t* info);
+
+
+io_read_status_t read_module_unit_info(int num_lines,
+									   const char** lines,
+									   module_unit_t* info);
+
+
+io_read_status_t parse_file(char* filename, module_unit_t* unit);
+
 
 /*
- * Get a string representation for a `module_linetype_t`.
+ * Console output helper functions.
  */
 const char* get_linetype_string(module_linetype_t lt);
-
+const char* get_io_status_string(io_read_status_t rs);
 
 #endif // IO_HELPER_H

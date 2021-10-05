@@ -54,7 +54,9 @@ typedef enum
 	LINETYPE_MODULE_DECLARATION,
 	LINETYPE_MODULE_PARTITION_DECLARATION,
 	LINETYPE_EXPORT_DECLARATION,
-	LINETYPE_IMPORT_DECLARATION,
+	LINETYPE_IMPORT_MODULE,
+	LINETYPE_IMPORT_PARTITION,
+	LINETYPE_IMPORT_HEADER,
 	LINETYPE_GLOBAL_MODULE_FRAGMENT,
 	LINETYPE_PRIVATE_MODULE_FRAGMENT
 } module_linetype_t;
@@ -63,7 +65,7 @@ typedef struct
 {
 	module_linetype_t linetype;
 	char* module_name;
-	char* module_partition_name;
+	char* partition_name;
 	char* header_name;
 	// TODO: attr(optional)
 } module_lineinfo_t;
@@ -76,8 +78,11 @@ typedef enum
 
 	IO_READ_STATUS_NOT_MODULE,
 	// TODO: Does gcc care about module/partition ?
+
+	// The only two valid outputs:
 	IO_READ_STATUS_MODULE,
 	IO_READ_STATUS_MODULE_PARTITION,
+
 	IO_READ_STATUS_INVALID_MODULE_SYNTAX,
 	IO_READ_STATUS_DUPLICATE_DEFINITION,
 	IO_READ_STATUS_UNSUPPORTED_DECLARATION

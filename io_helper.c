@@ -2,11 +2,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static int is_trailing_char(char c)
+{
+	switch(c)
+	{
+	case '\n':
+	case '\r':
+	case ';':
+		return 1;
+	default:
+		return 0;
+	}
+}
+
 static char* dup_string(const char* str)
 {
 	size_t len = strlen(str);
 	char* mem = malloc(len + 1);
 	strcpy(mem, str);
+	// Remove trailing characters if any
+	if (is_trailing_char(mem[len-1])) mem[len-1] = '\0';
+	if (is_trailing_char(mem[len-2])) mem[len-2] = '\0';
 	return mem;
 }
 
@@ -25,7 +41,7 @@ void init_lineinfo(module_lineinfo_t* info)
 {
 	info->linetype = LINETYPE_UNDETERMINED;
 	info->module_name = NULL;
-	info->module_partition_name = NULL;
+	info->partition_name = NULL;
 	info->header_name = NULL;
 }
 
@@ -35,10 +51,10 @@ void free_lineinfo(module_lineinfo_t* info)
 	info->linetype = LINETYPE_INVALID_MODULE_SYNTAX;
 	if (info->module_name != NULL) free(info->module_name);
 	if (info->header_name != NULL) free(info->header_name);
-	if (info->module_partition_name != NULL) free(info->module_partition_name);
+	if (info->partition_name != NULL) free(info->partition_name);
 	info->module_name = NULL;
 	info->header_name = NULL;
-	info->module_partition_name = NULL;
+	info->partition_name = NULL;
 }
 
 /*
@@ -90,7 +106,7 @@ void read_module_declaration(module_lineinfo_t* info)
 
 		// Then read partition-name
 		char* ptr = &tok[len];
-		info->module_partition_name = dup_string(ptr);
+		info->partition_name = dup_string(ptr);
 		info->linetype = LINETYPE_MODULE_PARTITION_DECLARATION;
 
 		// NOTE: For now we ignore attr(optional)
@@ -114,7 +130,7 @@ void read_module_declaration(module_lineinfo_t* info)
 		tok = strtok(NULL, " ");
 		if (tok == NULL) { return; }
 
-		info->module_partition_name = dup_string(tok);
+		info->partition_name = dup_string(tok);
 		// NOTE: This would be the place to check attr(optional)
 		// TODO: Might also report invalid syntax if semicolon is missing
 		info->linetype = LINETYPE_MODULE_PARTITION_DECLARATION;
@@ -125,7 +141,7 @@ void read_module_declaration(module_lineinfo_t* info)
 		char* ptr = &tok[1];
 		if (*ptr == '\0') { return; }
 
-		info->module_partition_name = dup_string(ptr);
+		info->partition_name = dup_string(ptr);
 		info->linetype = LINETYPE_MODULE_PARTITION_DECLARATION;
 		return;
 	}
@@ -141,7 +157,7 @@ void read_module_declaration(module_lineinfo_t* info)
 /*
  * This function is called after reading "import".
  */
-void read_import_declaration(module_lineinfo_t* info)
+static void read_import_declaration(module_lineinfo_t* info)
 {
 	char* tok = strtok(NULL, "; ");
 	if (tok == NULL) { return; }
@@ -151,8 +167,8 @@ void read_import_declaration(module_lineinfo_t* info)
 		char* ptr = &tok[1];
 		if (*ptr == '\0') { return; }
 
-		info->module_partition_name = dup_string(ptr);
-		info->linetype = LINETYPE_IMPORT_DECLARATION;
+		info->partition_name = dup_string(ptr);
+		info->linetype = LINETYPE_IMPORT_PARTITION;
 		return;
 	}
 	// there is space between ':' and partition name
@@ -160,13 +176,16 @@ void read_import_declaration(module_lineinfo_t* info)
 		tok = strtok(NULL, "; ");
 		if (tok == NULL) { return; }
 
-		info->module_partition_name = dup_string(tok);
-		info->linetype = LINETYPE_IMPORT_DECLARATION;
+		info->partition_name = dup_string(tok);
+		info->linetype = LINETYPE_IMPORT_PARTITION;
 		return;
 	}
+	// TODO: Check if we import a header
+
+	// we import a module
 	else {
 		info->module_name = dup_string(tok);
-		info->linetype = LINETYPE_IMPORT_DECLARATION;
+		info->linetype = LINETYPE_IMPORT_MODULE;
 
 		// NOTE: For now we ignore attr(optional)
 		return;
@@ -283,14 +302,12 @@ static io_read_status_t read_module_unit_info(FILE* fp, module_unit_t* module_un
 		case LINETYPE_EMPTY:
 			break;
 		case LINETYPE_INVALID_MODULE_SYNTAX:
-			printf("ERROR: Invalid module syntax\n");
 			status = IO_READ_STATUS_INVALID_MODULE_SYNTAX;
 			has_error = 1;
 			break;
 
 		case LINETYPE_MODULE_DECLARATION:
 			if (has_module_unit_declared) {
-				printf("ERROR: Module unit already declared\n");
 				status = IO_READ_STATUS_DUPLICATE_DEFINITION;
 				has_error = 1;
 			} else {
@@ -303,13 +320,12 @@ static io_read_status_t read_module_unit_info(FILE* fp, module_unit_t* module_un
 
 		case LINETYPE_MODULE_PARTITION_DECLARATION:
 			if (has_module_unit_declared) {
-				printf("ERROR: Module unit already declared\n");
 				status = IO_READ_STATUS_DUPLICATE_DEFINITION;
 				has_error = 1;
 			} else {
 				module_unit->module_type = MODULE_TYPE_PARTITION;
 				module_unit->module_name = info.module_name;
-				module_unit->module_partition_name = info.module_partition_name;
+				module_unit->partition_name = info.partition_name;
 				status = IO_READ_STATUS_MODULE_PARTITION;
 				has_module_unit_declared = 1;
 			}
@@ -318,13 +334,19 @@ static io_read_status_t read_module_unit_info(FILE* fp, module_unit_t* module_un
 		case LINETYPE_EXPORT_DECLARATION:
 			should_stop = 1;
 			break;
-		case LINETYPE_IMPORT_DECLARATION:
-			// TODO: Add imported module to dependency list
+
+		case LINETYPE_IMPORT_MODULE:
+			module_unit_addimport_module(module_unit, info.module_name);
+			break;
+		case LINETYPE_IMPORT_PARTITION:
+			module_unit_addimport_partition(module_unit, info.partition_name);
+			break;
+		case LINETYPE_IMPORT_HEADER:
+			module_unit_addimport_header(module_unit, info.header_name);
 			break;
 
 		case LINETYPE_GLOBAL_MODULE_FRAGMENT:
 			if (has_global_module_fragment_declared) {
-				printf("ERROR: Global module fragment already declared\n");
 				status = IO_READ_STATUS_DUPLICATE_DEFINITION;
 				has_error = 1;
 			} else {
@@ -333,7 +355,6 @@ static io_read_status_t read_module_unit_info(FILE* fp, module_unit_t* module_un
 			break;
 
 		case LINETYPE_PRIVATE_MODULE_FRAGMENT:
-			printf("UNSUPPORTED: Encountered private module fragment\n");
 			status = IO_READ_STATUS_UNSUPPORTED_DECLARATION;
 			has_error = 1;
 			break;
@@ -386,7 +407,6 @@ io_read_status_t parse_file(char* filename, module_unit_t* unit)
 	char* line = NULL;
 	if (is_file_module_unit(fp, &line))
 	{
-		printf("~~~ Module unit\n");
 		// rewind file pointer!
 		rewind(fp);
 
@@ -395,11 +415,11 @@ io_read_status_t parse_file(char* filename, module_unit_t* unit)
 	}
 	else
 	{
-		printf("~~~ Not module unit\n");
 		status = IO_READ_STATUS_NOT_MODULE;
 	}
 
 	fclose(fp);
+	free(line);
 	return status;
 }
 
@@ -418,18 +438,27 @@ const char* get_linetype_string(module_linetype_t lt)
 		return "LINETYPE_EMPTY";
 	case LINETYPE_INVALID_MODULE_SYNTAX:
 		return "LINETYPE_INVALID_MODULE_SYNTAX";
+
 	case LINETYPE_MODULE_DECLARATION:
 		return "LINETYPE_MODULE_DECLARATION";
 	case LINETYPE_MODULE_PARTITION_DECLARATION:
 		return "LINETYPE_MODULE_PARTITION_DECLARATION";
+
 	case LINETYPE_EXPORT_DECLARATION:
 		return "LINETYPE_EXPORT_DECLARATION";
-	case LINETYPE_IMPORT_DECLARATION:
-		return "LINETYPE_IMPORT_DECLARATION";
+
+	case LINETYPE_IMPORT_MODULE:
+		return "LINETYPE_IMPORT_MODULE";
+	case LINETYPE_IMPORT_PARTITION:
+		return "LINETYPE_IMPORT_PARTITION";
+	case LINETYPE_IMPORT_HEADER:
+		return "LINETYPE_IMPORT_HEADER";
+
 	case LINETYPE_GLOBAL_MODULE_FRAGMENT:
 		return "LINETYPE_GLOBAL_MODULE_FRAGMENT";
 	case LINETYPE_PRIVATE_MODULE_FRAGMENT:
 		return "LINETYPE_PRIVATE_MODULE_FRAGMENT";
+
 	default:
 		return "ERROR: Unrecognized linetype";
 	}

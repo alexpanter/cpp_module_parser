@@ -5,6 +5,7 @@
 
 typedef enum fefe
 {
+	MODULE_TYPE_UNDETERMINED,
 	MODULE_TYPE_NONE,
 	MODULE_TYPE_INVALID,
 	MODULE_TYPE_MODULE,
@@ -15,6 +16,7 @@ typedef struct module_unit_t
 {
 	dependency_list_t* dependency_list;
 	char* module_name;
+	char* module_partition_name;
 	module_type_t module_type;
 } module_unit_t;
 

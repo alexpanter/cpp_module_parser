@@ -1,4 +1,4 @@
-GCC=gcc -Og -std=gnu11 -Wall -Werror -pedantic
+GCC=gcc -g -std=gnu11 -Wall -Werror -pedantic
 
 .PHONY: clean
 

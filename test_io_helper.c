@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 #define TEST_PRINT_ALL
+#define CHECK_NULL(str) ((str == NULL) ? "<null>" : str)
 
 void testline(const char* line)
 {
@@ -26,8 +27,12 @@ void testfile(char* filename)
 	printf("testfile: %s\n", filename);
 	io_read_status_t status = parse_file(filename, &unit);
 	printf("--> io_read_status: %s\n", get_io_status_string(status));
+	printf("--> module-type: %s\n", get_module_type_string(unit.module_type));
+	printf("--> module-name: %s\n", CHECK_NULL(unit.module_name));
+	printf("--> module-partition-name: %s\n", CHECK_NULL(unit.module_partition_name));
 
 	module_unit_free(&unit);
+	printf("\n");
 }
 
 

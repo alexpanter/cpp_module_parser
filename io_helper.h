@@ -47,7 +47,9 @@
  */
 typedef enum
 {
+	LINETYPE_UNDETERMINED,
 	LINETYPE_OTHER,
+	LINETYPE_EMPTY,
 	LINETYPE_INVALID_MODULE_SYNTAX,
 	LINETYPE_MODULE_DECLARATION,
 	LINETYPE_MODULE_PARTITION_DECLARATION,
@@ -68,12 +70,16 @@ typedef struct
 
 typedef enum
 {
+	IO_READ_STATUS_UNDETERMINED,
 	IO_READ_STATUS_FILE_NOT_EXISTS,
+	IO_READ_STATUS_INTERNAL_ERROR,
+
 	IO_READ_STATUS_NOT_MODULE,
 	// TODO: Does gcc care about module/partition ?
 	IO_READ_STATUS_MODULE,
 	IO_READ_STATUS_MODULE_PARTITION,
-	IO_READ_STATUS_SUCCESS,
+	IO_READ_STATUS_INVALID_MODULE_SYNTAX,
+	IO_READ_STATUS_DUPLICATE_DEFINITION,
 	IO_READ_STATUS_UNSUPPORTED_DECLARATION
 } io_read_status_t;
 
@@ -91,14 +97,14 @@ void free_lineinfo(module_lineinfo_t* info);
 /*
  * Read a line and report type of C++ line.
  */
-void read_line(const char* line, module_lineinfo_t* info);
+void read_line(char* line, module_lineinfo_t* info);
 
-
-io_read_status_t read_module_unit_info(int num_lines,
-									   const char** lines,
-									   module_unit_t* info);
-
-
+/*
+ * Open a C++ source file and attempt to parse it as a module unit.
+ * Returns an `io_read_status_t` enum and fills out the referenced
+ * `module_unit_t` struct containing info about the module unit
+ * described in the file.
+ */
 io_read_status_t parse_file(char* filename, module_unit_t* unit);
 
 

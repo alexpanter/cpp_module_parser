@@ -39,10 +39,12 @@ of steps:
 NOTE: This is still work in progress!
 
 The intent is to provide a backend for
-[premake](https://github.com/premake/premake-core/), for generating build scripts
-for the GNU G++-11 compiler toolset.
+[premake](https://github.com/premake/premake-core/), for generating build
+scripts for the GNU G++-11 compiler toolset.
+For the sake of integrating with the existing codebase of premake, the choice
+was made to write this software using C.
 
 ## License ##
 
-This software is released under a permissive license but without warranties
-(see LICENSE.md for details).
+This software is released under a permissive license without providing any
+warranties (see LICENSE.md for details).

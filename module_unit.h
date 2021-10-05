@@ -19,6 +19,7 @@ typedef struct module_unit_deplist_t
 
 typedef struct module_unit_t
 {
+	char* filename; // TODO: Use absolute file path instead?
 	char* module_name;
 	char* partition_name;
 	module_type_t module_type;

@@ -26,7 +26,6 @@ static char* dup_string(const char* str)
 	return mem;
 }
 
-
 static char* dup_string_n(const char* str, size_t n)
 {
 	// Hmm will this work?
@@ -34,6 +33,17 @@ static char* dup_string_n(const char* str, size_t n)
 	strncpy(mem, str, n);
 	mem[n] = '\0';
 	return mem;
+}
+
+static int has_char(const char* str, char c)
+{
+	char* ptr = (char*)str;
+	while (*ptr != '\0')
+	{
+		if (*ptr == c) return 1;
+		ptr++;
+	}
+	return 0;
 }
 
 
@@ -55,30 +65,6 @@ void free_lineinfo(module_lineinfo_t* info)
 	info->module_name = NULL;
 	info->header_name = NULL;
 	info->partition_name = NULL;
-}
-
-/*
-  static size_t count_occurences(const char* str, char c)
-  {
-  size_t cnt = 0;
-  char* ptr = (char*)str;
-  while (*ptr != '\0')
-  {
-  if (*ptr == c) { cnt++; }
-  }
-  return cnt;
-  }
-*/
-
-static int has_char(const char* str, char c)
-{
-	char* ptr = (char*)str;
-	while (*ptr != '\0')
-	{
-		if (*ptr == c) return 1;
-		ptr++;
-	}
-	return 0;
 }
 
 
@@ -412,6 +398,7 @@ io_read_status_t parse_file(char* filename, module_unit_t* unit)
 
 		// parse and fill out `unit` struct.
 		status = read_module_unit_info(fp, unit, &line);
+		unit->filename = dup_string(filename);
 	}
 	else
 	{

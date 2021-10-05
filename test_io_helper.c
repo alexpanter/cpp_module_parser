@@ -60,6 +60,8 @@ int main()
 	testfile("example_files/ignore.cpp");
 	testfile("example_files/export_module_computer.cpp");
 	testfile("example_files/export_module_computer-cpu.cpp");
+	testfile("example_files/large_module_unit.cpp");
+
 	testfile("example_files/is_module_test/negative1.cpp");
 	testfile("example_files/is_module_test/negative2.cpp");
 

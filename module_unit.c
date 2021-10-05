@@ -8,6 +8,7 @@
 void module_unit_init(module_unit_t* unit)
 {
 	unit->module_type = MODULE_TYPE_UNDETERMINED;
+	unit->filename = NULL;
 	unit->module_name = NULL;
 	unit->partition_name = NULL;
 	unit->module_deplist = NULL;
@@ -17,8 +18,10 @@ void module_unit_init(module_unit_t* unit)
 
 void module_unit_free(module_unit_t* unit)
 {
+	if (unit->filename != NULL) free(unit->filename);
 	if (unit->module_name != NULL) free(unit->module_name);
 	if (unit->partition_name != NULL) free(unit->partition_name);
+	unit->filename = NULL;
 	unit->module_name = NULL;
 	unit->partition_name = NULL;
 
@@ -48,6 +51,10 @@ void module_unit_free(module_unit_t* unit)
 		free(ptr);
 		ptr = next;
 	}
+
+	unit->module_deplist = NULL;
+	unit->partition_deplist = NULL;
+	unit->header_deplist = NULL;
 }
 
 
@@ -103,6 +110,7 @@ void module_unit_print_deplist(module_unit_t* unit)
 
 void module_unit_debug_print(module_unit_t* unit)
 {
+	printf("--> filename: %s\n", CHECK_NULL_STR(unit->filename));
 	printf("--> module-type: %s\n",
 		   get_module_type_string(unit->module_type));
 	printf("--> module-name: \"%s\"\n",

@@ -1,6 +1,7 @@
 # cpp_module_parser #
 
-Experimentation with creating build scripts for GCC with C++20 modules
+A tool for generating build scripts for C++20 projects, intended at targeting
+GNU Makefile and the GCC toolset (>= g++-11).
 
 ## Motivation ##
 
@@ -24,7 +25,7 @@ unit, that is a source file preprocessed, lexed, and parsed, but not assembled.
 And as such, they are strictly dependent upon already built module units (BMI's)
 for each module unit that they import, in order to generate the syntax tree.
 
-Due to this requirement, creating a build system for modules requires a series
+Due to this requirement, creating a build tool for modules requires a series
 of steps:
 
 1) parsing all references source files in the current project, read their module
@@ -41,10 +42,11 @@ NOTE: This is still work in progress!
 The intent is to provide a backend for
 [premake](https://github.com/premake/premake-core/), for generating build
 scripts for the GNU G++-11 compiler toolset.
-For the sake of integrating with the existing codebase of premake, the choice
-was made to write this software using C.
+For the sake of integrating with the existing codebase of premake, and
+potentially other build script generators, a choice was made to write this
+software using C.
 
 ## License ##
 
-This software is released under a permissive license without providing any
-warranties (see LICENSE.md for details).
+This software is released under the BSD-2-Clause License, to provide maximal
+flexibility of use and to promote software freedom.

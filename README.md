@@ -5,7 +5,7 @@ Experimentation with creating build scripts for GCC with C++20 modules
 ## Motivation ##
 
 C++-20 introduced a new feature called "modules".
-This is likely the most drastic change to the langauge since its inception,
+This is likely the most drastic change to the language since its inception,
 and is a huge effort in the direction of eliminating the preprocessing stage.
 
 Likely, the preprocessing stage will never truly be removed as it does carry

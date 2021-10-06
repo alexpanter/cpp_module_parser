@@ -4,3 +4,4 @@ GRTAGS
 GTAGS
 test_io_helper
 *.o
+cmop

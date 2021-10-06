@@ -56,14 +56,16 @@ int main()
 	  testline("export import :blood_orange");
 	*/
 
-	testfile("example_files/non_existent_file.cpp");
-	testfile("example_files/ignore.cpp");
-	testfile("example_files/export_module_computer.cpp");
-	testfile("example_files/export_module_computer-cpu.cpp");
-	testfile("example_files/large_module_unit.cpp");
+	/* testfile("example_files/non_existent_file.cpp"); */
+	/* testfile("example_files/ignore.cpp"); */
+	/* testfile("example_files/export_module_computer.cpp"); */
+	/* testfile("example_files/export_module_computer-cpu.cpp"); */
+	/* testfile("example_files/large_module_unit.cpp"); */
 
-	testfile("example_files/is_module_test/negative1.cpp");
-	testfile("example_files/is_module_test/negative2.cpp");
+	/* testfile("example_files/is_module_test/negative1.cpp"); */
+	/* testfile("example_files/is_module_test/negative2.cpp"); */
+
+	testfile("example_files/car/car.cpp");
 
 	return 0;
 }

@@ -46,6 +46,34 @@ static int has_char(const char* str, char c)
 	return 0;
 }
 
+// Dealing with multiline comments in files.
+typedef enum
+{
+	MULTILINE_COMMENT_FINISHED,
+	MULTILINE_COMMEND_UNFINISHED
+} multiline_comment_t;
+
+// TODO: This function is under-untilized
+static multiline_comment_t trim_away_multiline_comment(char* start, char** trimmed)
+{
+	char* ptr = start;
+	while (1)
+	{
+		if (*ptr == '\n' || *ptr == '\r' || *ptr == '\0') {
+			return MULTILINE_COMMENT_UNFINISHED;
+		}
+		if (*ptr == '*') {
+			ptr++;
+			if (*ptr == '/') {
+				ptr++;
+				*trimmed = ptr;
+				return MULTILINE_COMMENT_FINISHED;
+			}
+		}
+		ptr++;
+	}
+}
+
 
 void init_lineinfo(module_lineinfo_t* info)
 {
@@ -182,7 +210,7 @@ static void read_import_declaration(module_lineinfo_t* info)
 void read_line(char* line, module_lineinfo_t* info)
 {
 	info->linetype = LINETYPE_INVALID_MODULE_SYNTAX;
-	char* tok = strtok(line, "\t\n; ");
+	char* tok = strtok(line, "\t\n ");
 
 	// If the first token is "module" it is either a global
 	// or private module fragment, or a module declaration.
@@ -240,8 +268,8 @@ void read_line(char* line, module_lineinfo_t* info)
 	else if (strcmp(tok, "import") == 0) {
 		read_import_declaration(info);
 		return;
-	}
-	else {
+	} // TODO: "Only preprocessing directives can appear in the global module fragment."
+	else { // TODO: Possibly add check for lines starting with '#', might carry significance?
 		info->linetype = LINETYPE_OTHER;
 		return;
 	}
@@ -423,6 +451,9 @@ const char* get_linetype_string(module_linetype_t lt)
 		return "LINETYPE_OTHER";
 	case LINETYPE_EMPTY:
 		return "LINETYPE_EMPTY";
+	case LINETYPE_PREPROCESSING_DIRECTIVE:
+		return "LINETYPE_PREPROCESSING_DIRECTIVE";
+
 	case LINETYPE_INVALID_MODULE_SYNTAX:
 		return "LINETYPE_INVALID_MODULE_SYNTAX";
 

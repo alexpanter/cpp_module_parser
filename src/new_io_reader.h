@@ -1,0 +1,18 @@
+#ifndef NEW_IO_READER_H
+#define NEW_IO_READER_H
+
+typedef enum
+{
+	// error status
+	READ_STATUS_UNDETERMINED, // TODO: Necessary?
+	READ_STATUS_FILE_NOT_EXISTS,
+	READ_STATUS_INVALID_SYNTAX,
+
+	// ok status
+	READ_STATUS_MODULE,
+	READ_STATUS_MODULE_PARTITION
+} read_status_t;
+
+
+
+#endif // NEW_IO_READER_H

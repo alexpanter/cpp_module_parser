@@ -2,6 +2,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+// =============================== //
+// === STRING HELPER FUNCTIONS === //
+// =============================== //
+
 static int is_trailing_char(char c)
 {
 	switch(c)
@@ -46,14 +51,18 @@ static int has_char(const char* str, char c)
 	return 0;
 }
 
-// Dealing with multiline comments in files.
+
+// ==================================== //
+// === HANDLING MULTI-LINE COMMENTS === //
+// ==================================== //
+
 typedef enum
 {
 	MULTILINE_COMMENT_FINISHED,
-	MULTILINE_COMMEND_UNFINISHED
+	MULTILINE_COMMENT_UNFINISHED
 } multiline_comment_t;
 
-// TODO: This function is under-untilized
+// TODO: Incompatible with strtok !
 static multiline_comment_t trim_away_multiline_comment(char* start, char** trimmed)
 {
 	char* ptr = start;
@@ -218,6 +227,9 @@ void read_line(char* line, module_lineinfo_t* info)
 		info->linetype = LINETYPE_EMPTY;
 		return;
 	}
+	else if (tok[0] == '/' && tok[1] == '*') {
+		multiline_comment_t ml_status = trim_away_multiline_comment()
+	}
 	else if (strcmp(tok, "module") == 0)
 	{
 		tok = strtok(NULL, " ");
@@ -292,7 +304,6 @@ static io_read_status_t read_module_unit_info(FILE* fp, module_unit_t* module_un
 	// Most, if not all, lines will be < 100 characters.
 	while ((nread = getline(line, &len, fp)) != -1)
 	{
-		//printf("line: %s", (*line == NULL) ? "<null>" : *line);
 		if (has_error || should_stop) break;
 
 		// Create struct to hold info about current line in file.
@@ -387,6 +398,7 @@ static io_read_status_t read_module_unit_info(FILE* fp, module_unit_t* module_un
 /*
  * Perform a quick check to see, if the file is actually a module unit.
  */
+// TODO: This function is not valid since file may begin with multi-line comment!
 static int is_file_module_unit(FILE* fp, char** line)
 {
 	size_t len;

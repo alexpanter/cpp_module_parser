@@ -26,6 +26,7 @@ typedef struct module_unit_t
 	module_unit_deplist_t* module_deplist;
 	module_unit_deplist_t* partition_deplist;
 	module_unit_deplist_t* header_deplist;
+	unsigned long line_num; // Used for reporting errors
 } module_unit_t;
 
 

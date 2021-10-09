@@ -14,6 +14,7 @@ void module_unit_init(module_unit_t* unit)
 	unit->module_deplist = NULL;
 	unit->partition_deplist = NULL;
 	unit->header_deplist = NULL;
+	unit->line_num = 0;
 }
 
 void module_unit_free(module_unit_t* unit)
@@ -24,6 +25,7 @@ void module_unit_free(module_unit_t* unit)
 	unit->filename = NULL;
 	unit->module_name = NULL;
 	unit->partition_name = NULL;
+	unit->line_num = 0;
 
 	module_unit_deplist_t* ptr = unit->module_deplist;
 	while (ptr != NULL)

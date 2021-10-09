@@ -1,6 +1,8 @@
 #ifndef NEW_IO_READER_H
 #define NEW_IO_READER_H
 
+#include "module_unit.h"
+
 typedef enum
 {
 	// error status
@@ -8,9 +10,8 @@ typedef enum
 	READ_STATUS_INVALID_SYNTAX,
 
 	// ok status
-	READ_STATUS_NOT_MODULE,
 	READ_STATUS_MODULE,
-	READ_STATUS_MODULE_PARTITION
+	READ_STATUS_NOT_MODULE
 } read_status_t;
 
 
@@ -23,5 +24,6 @@ typedef enum
  */
 read_status_t read_file(char* filename, module_unit_t* unit);
 
+const char* get_read_status_string(read_status_t status);
 
 #endif // NEW_IO_READER_H

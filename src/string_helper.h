@@ -4,5 +4,4 @@
 int string_helper_is_whitespace(char c);
 
 
-
 #endif // STRING_HELPER_H

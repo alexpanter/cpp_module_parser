@@ -51,12 +51,19 @@ typedef enum
 	MODULE_LINE_IMPORT_HEADER
 } module_line_t;
 
+typedef enum
+{
+	MACRO_LINE_UNFINISHED,
+	MACRO_LINE_FINISHED
+} macro_line_t;
+
 typedef struct
 {
 	int is_done;
 	int module_read_error;
 	int duplicate_definition_error;
 	int multiline_comment;
+	int multiline_macro;
 	int may_not_declare_module;
 	int has_global_module_fragment;
 	int has_module_declaration;
@@ -114,6 +121,7 @@ static void init_file_status(file_status_t* status)
 	status->module_read_error = 0;
 	status->duplicate_definition_error = 0;
 	status->multiline_comment = 0;
+	status->multiline_macro = 0;
 	status->may_not_declare_module = 0;
 	status->has_global_module_fragment = 0;
 	status->has_module_declaration = 0;
@@ -213,6 +221,35 @@ static keyword_t read_keyword(char** read_ptr)
 	// read a symbol instead.
 	*read_ptr = ptr;
 	return KEYWORD_SYMBOL;
+}
+
+
+/*
+typedef enum
+{
+MACRO_LINE_UNFINISHED,
+MACRO_LINE_FINISHED
+} macro_line_t;
+*/
+
+static macro_line_t read_macro_line(char** read_ptr)
+{
+	// If one found, macro continues to next line, but only when it's the
+	// last character on that line (before newline that is).
+	int has_backslash = 0;
+
+	char* ptr = *read_ptr;
+
+	while (*ptr != '\0')
+	{
+		if (strhlp_is_line_terminator(*ptr) || *ptr == ' ') {}
+		else if (*ptr == '\\') { has_backslash = 1; }
+		else { has_backslash = 0; }
+		ptr++;
+	}
+
+	if (has_backslash) return MACRO_LINE_UNFINISHED;
+	else return MACRO_LINE_FINISHED;
 }
 
 static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
@@ -451,11 +488,19 @@ static void read_line(char* line, module_unit_t* unit, file_status_t* status)
 			return;
 		}
 	}
+	if (status->multiline_macro) {
+		macro_line_t ml_status = read_macro_line(&read_ptr);
+		if (ml_status == MACRO_LINE_FINISHED) {
+			status->multiline_macro = 0;
+		}
+		return;
+	}
 
 	while (1)
 	{
 		keyword_t keyword = read_keyword(&read_ptr);
 		module_line_t module_line;
+		macro_line_t macro_line;
 
 		switch (keyword)
 		{
@@ -469,6 +514,10 @@ static void read_line(char* line, module_unit_t* unit, file_status_t* status)
 			// TODO: We might not care!
 			if (!status->has_global_module_fragment && !status->has_module_declaration) {
 				status->may_not_declare_module = 1;
+			}
+			macro_line = read_macro_line(&read_ptr);
+			if (macro_line == MACRO_LINE_UNFINISHED) {
+				status->multiline_macro = 1;
 			}
 			return;
 		case KEYWORD_COLON:

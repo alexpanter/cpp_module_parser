@@ -4,7 +4,7 @@ BIN=../bin
 
 .PHONY: clean
 
-all: io_helper main
+all: $(BIN)/test_io_reader $(BIN)/$(APP)
 
 $(BIN)/$(APP): main.c
 	$(GCC) $< -o $@
@@ -19,6 +19,8 @@ $(BIN)/io_reader.o: io_reader.c io_reader.h
 	$(GCC) -c $< -o $@
 
 objects: $(BIN)/module_unit.o $(BIN)/io_reader.o $(BIN)/string_helper.o
+
+test_io_reader: $(BIN)/test_io_reader
 
 $(BIN)/test_io_reader: test_io_reader.c objects
 	$(GCC) $< $(BIN)/*.o -o $@

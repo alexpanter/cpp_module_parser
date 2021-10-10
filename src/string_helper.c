@@ -47,6 +47,18 @@ int get_symbol_length(char* str)
 	return cnt;
 }
 
+int strhlp_is_line_terminator(char c)
+{
+	switch (c)
+	{
+	case '\n':
+	case '\r':
+		return 1;
+	default:
+		return 0;
+	}
+}
+
 
 int strhlp_ends_keyword_export(char c)
 {
@@ -102,8 +114,8 @@ char* strhlp_read_module_name(char* str, int* str_len)
 	while (1)
 	{
 		char c = *ptr;
-		// is alpha-numerical or dot, respectively
-		if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c < 59) || c == 46) {
+		// is alpha-numerical, dot, or underscore, respectively
+		if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c < 59) || c == 46 || c == 95) {
 			len++;
 			ptr++;
 			continue;

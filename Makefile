@@ -1,15 +1,18 @@
 MAKEFLAGS += --no-print-directory
 .PHONY: clean
+APP=cmop
 
 GCC=gcc -g -std=gnu11 -Wall -Werror -pedantic
 
-all: io_helper main
+all:
+	@cd src/ && make all
 
-$(APP): src/main.c
-	$(GCC) $< -o bin/$@
+$(APP):
+	@cd src/ && make ../bin/$(APP)
 
 test_io_reader:
 	@mkdir -p bin
+#	@cd src/ && make test_io_reader
 	@cd src/ && make ../bin/test_io_reader
 
 

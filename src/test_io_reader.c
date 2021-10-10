@@ -92,6 +92,8 @@ void testfile(char* filename, expected_t* expected)
 	printf("\n");
 }
 
+
+
 void test_non_existent_file()
 {
 	expected_t exp = {
@@ -144,19 +146,39 @@ void test_export_module_computer_cpu()
 	testfile("example_files/export_module_computer-cpu.cpp", &exp);
 }
 
+void test_multiline_comment()
+{
+	expected_t exp = {
+		READ_STATUS_MODULE, MODULE_TYPE_MODULE,
+		"test", NULL,
+		NULL, NULL, NULL
+	};
+	testfile("example_files/comments_test/multiline_comment_1.cpp", &exp);
+}
+
+void test_large_module_unit()
+{
+	expected_t exp = {
+		READ_STATUS_MODULE, MODULE_TYPE_PARTITION,
+		"large_module.unit", "partition_1",
+		NULL, NULL, NULL
+	};
+	testfile("example_files/large_module_unit.cpp", &exp);
+}
+
 int main()
 {
-	/* testfile("example_files/large_module_unit.cpp"); */
 	/* testfile("example_files/is_module_test/invalid_1.cpp"); */
 	/* testfile("example_files/is_module_test/invalid_2.cpp"); */
 	/* testfile("example_files/is_module_test/invalid_3.cpp"); */
 	/* testfile("example_files/is_module_test/negative_1.cpp"); */
-	/* testfile("example_files/comments_test/multiline_comment_1.cpp"); */
 
-	test_non_existent_file();
-	test_ignore();
-	test_export_module_computer();
-	test_export_module_computer_cpu();
+	/* test_non_existent_file(); */
+	/* test_ignore(); */
+	/* test_export_module_computer(); */
+	/* test_export_module_computer_cpu(); */
+	/* test_multiline_comment(); */
+	test_large_module_unit();
 
 	if (num_failed == 0)
 		printf("All tests passed.\n");

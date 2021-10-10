@@ -7,8 +7,9 @@ void testfile(char* filename)
 	module_unit_init(&unit);
 	read_status_t status = read_file(filename, &unit);
 
-	printf("PARSE_FILE(%s):\n", filename);
+	printf("> %s:\n", filename);
 	printf("--> read_status: %s\n", get_read_status_string(status));
+	printf("--> lines read: %li\n", unit.line_num);
 
 	switch (status)
 	{
@@ -31,8 +32,19 @@ void testfile(char* filename)
 
 int main()
 {
-	//testfile("example_files/non_existent_file.cpp");
+	testfile("example_files/non_existent_file.cpp");
 	testfile("example_files/ignore.cpp");
+	/* testfile("example_files/large_module_unit.cpp"); */
+
+	testfile("example_files/export_module_computer.cpp");
+	testfile("example_files/export_module_computer-cpu.cpp");
+
+	testfile("example_files/is_module_test/invalid_1.cpp");
+	testfile("example_files/is_module_test/invalid_2.cpp");
+	testfile("example_files/is_module_test/invalid_3.cpp");
+	testfile("example_files/is_module_test/negative_1.cpp");
+
+	testfile("example_files/comments_test/multiline_comment_1.cpp");
 
 	return 0;
 }

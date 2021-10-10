@@ -5,6 +5,8 @@
 #include "string_helper.h"
 #include "io_reader.h"
 
+#define TEST_PRINT_ALL 0
+
 
 // ============================= //
 // === INTERNALLY USED TYPES === //
@@ -53,7 +55,9 @@ typedef struct
 {
 	int is_done;
 	int module_read_error;
+	int duplicate_definition_error;
 	int multiline_comment;
+	int may_not_declare_module;
 	int has_global_module_fragment;
 	int has_module_declaration;
 	int has_export_declaration;
@@ -65,7 +69,7 @@ typedef struct
 // === INTERNAL HELPER FUNCTIONS === //
 // ================================= //
 
-static const char* get_keyword_string(keyword_t keyword)
+const char* get_keyword_string(keyword_t keyword)
 {
 	switch (keyword)
 	{
@@ -86,7 +90,7 @@ static const char* get_keyword_string(keyword_t keyword)
 	}
 }
 
-static const char* get_module_line_string(module_line_t line)
+const char* get_module_line_string(module_line_t line)
 {
 	switch (line)
 	{
@@ -108,14 +112,16 @@ static void init_file_status(file_status_t* status)
 {
 	status->is_done = 0;
 	status->module_read_error = 0;
+	status->duplicate_definition_error = 0;
 	status->multiline_comment = 0;
+	status->may_not_declare_module = 0;
 	status->has_global_module_fragment = 0;
 	status->has_module_declaration = 0;
 	status->has_export_declaration = 0;
 	status->has_export_import_declaration = 0;
 }
 
-static void print_file_status(file_status_t* status)
+void print_file_status(file_status_t* status)
 {
 	printf("file_status:\n");
 	printf("--> is_done = %i\n", status->is_done);
@@ -154,6 +160,7 @@ static keyword_t read_keyword(char** read_ptr)
 	while (string_helper_is_whitespace(*ptr)) {
 		ptr++;
 	}
+	*read_ptr = ptr;
 
 	switch (*ptr)
 	{
@@ -181,25 +188,21 @@ static keyword_t read_keyword(char** read_ptr)
 	if (ptr[0] == '/' && ptr[1] == '/') return KEYWORD_SINGLELINE_COMMENT;
 
 	if (strncmp(ptr, "export", 6) == 0) {
-		printf("--> read_keyword(EXPORT)\n");
-		// TODO: ptr = &ptr[6];
-		for (int i = 0; i < 6; i++) ptr++;
+		ptr = &ptr[6];
 		if (strhlp_ends_keyword_export(*ptr)) {
 			*read_ptr = ptr;
 			return KEYWORD_EXPORT;
 		}
 	}
 	else if (strncmp(ptr, "import", 6) == 0) {
-		printf("--> read_keyword(IMPORT)\n");
-		for (int i = 0; i < 6; i++) ptr++;
+		ptr = &ptr[6];
 		if (strhlp_ends_keyword_import(*ptr)) {
 			*read_ptr = ptr;
 			return KEYWORD_IMPORT;
 		}
 	}
 	else if (strncmp(ptr, "module", 6) == 0) {
-		printf("--> read_keyword(MODULE)\n");
-		for (int i = 0; i < 6; i++) ptr++;
+		ptr = &ptr[6];
 		if (strhlp_ends_keyword_module(*ptr)) {
 			*read_ptr = ptr;
 			return KEYWORD_MODULE;
@@ -212,27 +215,9 @@ static keyword_t read_keyword(char** read_ptr)
 	return KEYWORD_SYMBOL;
 }
 
-/*
-typedef enum
-{
-	MODULE_LINE_INVALID_SYNTAX,
-
-	MODULE_LINE_GLOBAL_MODULE_FRAGMENT,
-	MODULE_LINE_DECLARE_MODULE,
-	MODULE_LINE_DECLARE_PARTITION,
-
-	MODULE_LINE_EXPORT,
-
-	MODULE_LINE_IMPORT_MODULE,
-	MODULE_LINE_IMPORT_PARTITION,
-	MODULE_LINE_IMPORT_HEADER
-} module_line_t;
-*/
-
 static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 									  module_unit_t* unit, file_status_t* status)
 {
-	printf("--> read_module_line(%s): %s", get_keyword_string(start_keyword), *read_ptr);
 	int endline = 0;
 	int line_should_end = 0;
 
@@ -252,11 +237,8 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 	while (!endline)
 	{
 		keyword_t keyword = read_keyword(read_ptr);
-		printf("----> %s\n", get_keyword_string(keyword));
-		printf("----> read_ptr: %s", *read_ptr);
 
 		if (line_should_end || keyword_pos >= max_line_keywords) {
-			printf("loop precondition check\n");
 			switch (keyword)
 			{
 			case KEYWORD_NULL:
@@ -279,11 +261,12 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 			break;
 
 		case KEYWORD_HASHTAG:
+			printf("read_module_line: KEYWORD_HASHTAG\n");
 			return MODULE_LINE_INVALID_SYNTAX;
 
 		case KEYWORD_COLON:
-			printf("read_module_line: KEYWORD_COLON not implemented!\n");
-			return MODULE_LINE_INVALID_SYNTAX;
+			keywords[keyword_pos++] = KEYWORD_COLON;
+			break;
 		case KEYWORD_SEMICOLON:
 			keywords[keyword_pos++] = KEYWORD_SEMICOLON;
 			line_should_end = 1;
@@ -301,27 +284,29 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 			return MODULE_LINE_INVALID_SYNTAX;
 
 		case KEYWORD_EXPORT:
-			printf("read_module_line: KEYWORD_EXPORT not implemented!\n");
+			// `export` may only appear as the first word in a line, so this is
+			// invalid syntax.
 			return MODULE_LINE_INVALID_SYNTAX;
 		case KEYWORD_IMPORT:
-			printf("read_module_line: KEYWORD_IMPORT not implemented!\n");
-			return MODULE_LINE_INVALID_SYNTAX;
+			keywords[keyword_pos++] = KEYWORD_IMPORT;
+			break;
 		case KEYWORD_MODULE:
 			keywords[keyword_pos++] = KEYWORD_MODULE;
 			break;
 
 		case KEYWORD_SYMBOL:
+			if (keywords[0] == KEYWORD_EXPORT && keyword_pos == 1) {
+				endline = 1;
+				continue;
+			}
 			if (symbol_pos >= max_line_symbols) {
-				printf("here\n");
 				return MODULE_LINE_INVALID_SYNTAX;
 			}
 			int len;
 			char* symbol = strhlp_read_module_name(*read_ptr, &len);
 			if (symbol == NULL) {
-				printf("no here\n");
 				return MODULE_LINE_INVALID_SYNTAX;
 			}
-			printf("symbol(%i): %s\n", len, symbol);
 			symbols[symbol_pos++] = symbol;
 			keywords[keyword_pos++] = KEYWORD_SYMBOL;
 			*read_ptr = &((*read_ptr)[len]);
@@ -334,6 +319,7 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 	}
 
 	// debug print
+#if TEST_PRINT_ALL
 	printf(">%i keywords:\n", keyword_pos);
 	for (int i = 0; i < max_line_keywords; i++) {
 		printf("--> [%i]: %s\n", i, get_keyword_string(keywords[i]));
@@ -342,6 +328,7 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 	for (int i = 0; i < max_line_symbols; i++) {
 		printf("--> [%i]: \"%s\"\n", i, symbols[i]);
 	}
+#endif
 
 	// gather line data
 	if (keywords[0] == KEYWORD_EXPORT) {
@@ -392,6 +379,12 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 			else {
 				return MODULE_LINE_INVALID_SYNTAX;
 			}
+		}
+		// "export ..."
+		else {
+			status->has_export_declaration = 1;
+			status->is_done = 1;
+			return MODULE_LINE_EXPORT;
 		}
 	}
 	else if (keywords[0] == KEYWORD_IMPORT) {
@@ -451,7 +444,6 @@ static void read_line(char* line, module_unit_t* unit, file_status_t* status)
 	// We read one char at a time, in search for module keywords, macros,
 	// or multi-line comments.
 	char* read_ptr = line;
-	printf("$ %s", line);
 
 	if (status->multiline_comment) {
 		keyword_t ml_status = end_multiline_comment(&read_ptr);
@@ -463,7 +455,6 @@ static void read_line(char* line, module_unit_t* unit, file_status_t* status)
 	while (1)
 	{
 		keyword_t keyword = read_keyword(&read_ptr);
-		printf("--> %s\n", get_keyword_string(keyword));
 		module_line_t module_line;
 
 		switch (keyword)
@@ -476,7 +467,10 @@ static void read_line(char* line, module_unit_t* unit, file_status_t* status)
 			// Rest of line needs to be ignored
 			// TODO: Macro functions may be multi-line, so we are not done, unfortunately!
 			// TODO: We might not care!
-			break;
+			if (!status->has_global_module_fragment && !status->has_module_declaration) {
+				status->may_not_declare_module = 1;
+			}
+			return;
 		case KEYWORD_COLON:
 			printf("read_file: KEYWORD_COLON not implemented!\n");
 			exit(1);
@@ -500,38 +494,24 @@ static void read_line(char* line, module_unit_t* unit, file_status_t* status)
 		case KEYWORD_EXPORT:
 		case KEYWORD_IMPORT:
 		case KEYWORD_MODULE:
-			/*
-			  MODULE_LINE_INVALID_SYNTAX,
-			  MODULE_LINE_DUPLICATE_DEFINITION,
-			  MODULE_LINE_GLOBAL_MODULE_FRAGMENT,
-			  MODULE_LINE_DECLARE_MODULE,
-			  MODULE_LINE_DECLARE_PARTITION,
-			  MODULE_LINE_EXPORT,
-			  MODULE_LINE_IMPORT_MODULE,
-			  MODULE_LINE_IMPORT_PARTITION,
-			  MODULE_LINE_IMPORT_HEADER
-
-			  int is_done;
-			  int module_read_error;
-			  int multiline_comment;
-			  int has_global_module_fragment;
-			  int has_module_declaration;
-			  int has_export_declaration;
-			  int has_export_import_declaration;
-			 */
+			if (status->may_not_declare_module &&
+				(keyword == KEYWORD_EXPORT || keyword == KEYWORD_MODULE)) {
+				status->module_read_error = 1;
+				return;
+			}
 			module_line = read_module_line(keyword, &read_ptr, unit, status);
-			printf(">%s\n", get_module_line_string(module_line));
 			switch (module_line)
 			{
 			case MODULE_LINE_INVALID_SYNTAX:
 				// We encountered a syntax error in a module line.
 				// The entire file will be considered invalid.
 				printf("--> MODULE_LINE_INVALID_SYNTAX\n");
+				printf("line: %s", line);
 				status->module_read_error = 1;
 				return;
 			case MODULE_LINE_DUPLICATE_DEFINITION:
 				printf("--> MODULE_LINE_DUPLICATE_DEFINITION\n");
-				status->module_read_error = 1;
+				status->duplicate_definition_error = 1;
 				return;
 
 			case MODULE_LINE_GLOBAL_MODULE_FRAGMENT:
@@ -605,7 +585,7 @@ read_status_t read_file(char* filename, module_unit_t* unit)
 	{
 		line_num++;
 		read_line(line, unit, &status);
-		if (status.is_done) break;
+		if (status.is_done || status.module_read_error) break;
 	}
 
 	// free resources
@@ -614,9 +594,14 @@ read_status_t read_file(char* filename, module_unit_t* unit)
 
 	// gather file data
 	unit->line_num = line_num;
+#if TEST_PRINT_ALL
 	print_file_status(&status);
+#endif
 	if (status.module_read_error) {
 		return READ_STATUS_INVALID_SYNTAX;
+	}
+	else if (status.duplicate_definition_error) {
+		return READ_STATUS_DUPLICATE_DEFINITION;
 	}
 	else if (status.has_global_module_fragment && !status.has_module_declaration) {
 		return READ_STATUS_INVALID_SYNTAX;

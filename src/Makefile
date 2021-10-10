@@ -12,7 +12,7 @@ $(BIN)/$(APP): main.c
 $(BIN)/module_unit.o: module_unit.c module_unit.h
 	$(GCC) -c $< -o $@
 
-$(BIN)/string_helper.o: string_helper.c string_helper.o
+$(BIN)/string_helper.o: string_helper.c
 	$(GCC) -c $< -o $@
 
 $(BIN)/io_reader.o: io_reader.c io_reader.h

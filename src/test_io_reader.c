@@ -166,19 +166,60 @@ void test_large_module_unit()
 	testfile("example_files/large_module_unit.cpp", &exp);
 }
 
+
+void is_module_test_negative_1()
+{
+	expected_t exp = {
+		READ_STATUS_NOT_MODULE, MODULE_TYPE_UNDETERMINED,
+		NULL, NULL,
+		NULL, NULL, NULL
+	};
+	testfile("example_files/is_module_test/negative_1.cpp", &exp);
+}
+
+
+void is_module_test_invalid_1()
+{
+	expected_t exp = {
+		READ_STATUS_INVALID_SYNTAX, MODULE_TYPE_UNDETERMINED,
+		NULL, NULL,
+		NULL, NULL, NULL
+	};
+	testfile("example_files/is_module_test/invalid_1.cpp", &exp);
+}
+
+void is_module_test_invalid_2()
+{
+	expected_t exp = {
+		READ_STATUS_INVALID_SYNTAX, MODULE_TYPE_UNDETERMINED,
+		NULL, NULL,
+		NULL, NULL, NULL
+	};
+	testfile("example_files/is_module_test/invalid_2.cpp", &exp);
+}
+
+void is_module_test_invalid_3()
+{
+	expected_t exp = {
+		READ_STATUS_INVALID_SYNTAX, MODULE_TYPE_UNDETERMINED,
+		NULL, NULL,
+		NULL, NULL, NULL
+	};
+	testfile("example_files/is_module_test/invalid_3.cpp", &exp);
+}
+
 int main()
 {
-	/* testfile("example_files/is_module_test/invalid_1.cpp"); */
-	/* testfile("example_files/is_module_test/invalid_2.cpp"); */
-	/* testfile("example_files/is_module_test/invalid_3.cpp"); */
-	/* testfile("example_files/is_module_test/negative_1.cpp"); */
-
-	/* test_non_existent_file(); */
-	/* test_ignore(); */
-	/* test_export_module_computer(); */
-	/* test_export_module_computer_cpu(); */
-	/* test_multiline_comment(); */
+	test_non_existent_file();
+	test_ignore();
+	test_export_module_computer();
+	test_export_module_computer_cpu();
+	test_multiline_comment();
 	test_large_module_unit();
+	is_module_test_negative_1();
+	is_module_test_invalid_1();
+	is_module_test_invalid_2();
+	is_module_test_invalid_3();
 
 	if (num_failed == 0)
 		printf("All tests passed.\n");

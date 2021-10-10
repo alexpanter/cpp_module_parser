@@ -31,7 +31,7 @@ void testfile(char* filename)
 
 int main()
 {
-	testfile("example_files/non_existent_file.cpp");
+	//testfile("example_files/non_existent_file.cpp");
 	testfile("example_files/ignore.cpp");
 
 	return 0;

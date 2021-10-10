@@ -373,7 +373,7 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 			else if (keyword_pos >= 5 && keywords[2] == KEYWORD_COLON &&
 					 keywords[3] == KEYWORD_SYMBOL && keywords[4] == KEYWORD_SEMICOLON &&
 					 symbol_pos >= 1) {
-				module_unit_addimport_partition(unit, symbols[1]);
+				module_unit_addimport_partition(unit, symbols[0]);
 				return MODULE_LINE_IMPORT_PARTITION;
 			}
 			else {

@@ -50,6 +50,14 @@ void module_unit_addimport_header(module_unit_t* unit, char* name);
 
 
 /*
+ * Check module dependencies.
+ */
+int module_unit_imports_module(module_unit_t* unit, char* name);
+int module_unit_imports_partition(module_unit_t* unit, char* name);
+int module_unit_imports_header(module_unit_t* unit, char* name);
+
+
+/*
  * String representation of `module_type_t`, useful
  * for print debugging.
  */

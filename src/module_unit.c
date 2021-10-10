@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "module_unit.h"
 
 #define CHECK_NULL_STR(str) ((str == NULL) ? "<null>" : str)
@@ -82,6 +83,37 @@ void module_unit_addimport_header(module_unit_t* unit, char* name)
 	dep->name = name;
 	dep->next = unit->header_deplist;
 	unit->header_deplist = dep;
+}
+
+
+int module_unit_imports_module(module_unit_t* unit, char* name)
+{
+	module_unit_deplist_t* ptr = unit->module_deplist;
+	while (ptr != NULL) {
+		if (strcmp(ptr->name, name) == 0) return 1;
+		ptr = ptr->next;
+	}
+	return 0;
+}
+
+int module_unit_imports_partition(module_unit_t* unit, char* name)
+{
+	module_unit_deplist_t* ptr = unit->partition_deplist;
+	while (ptr != NULL) {
+		if (strcmp(ptr->name, name) == 0) return 1;
+		ptr = ptr->next;
+	}
+	return 0;
+}
+
+int module_unit_imports_header(module_unit_t* unit, char* name)
+{
+	module_unit_deplist_t* ptr = unit->header_deplist;
+	while (ptr != NULL) {
+		if (strcmp(ptr->name, name) == 0) return 1;
+		ptr = ptr->next;
+	}
+	return 0;
 }
 
 

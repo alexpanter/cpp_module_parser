@@ -26,6 +26,7 @@ typedef struct module_unit_t
 	module_unit_deplist_t* module_deplist;
 	module_unit_deplist_t* partition_deplist;
 	module_unit_deplist_t* header_deplist;
+	unsigned long line_num; // Used for reporting errors
 } module_unit_t;
 
 
@@ -46,6 +47,14 @@ void module_unit_free(module_unit_t* unit);
 void module_unit_addimport_module(module_unit_t* unit, char* name);
 void module_unit_addimport_partition(module_unit_t* unit, char* name);
 void module_unit_addimport_header(module_unit_t* unit, char* name);
+
+
+/*
+ * Check module dependencies.
+ */
+int module_unit_imports_module(module_unit_t* unit, char* name);
+int module_unit_imports_partition(module_unit_t* unit, char* name);
+int module_unit_imports_header(module_unit_t* unit, char* name);
 
 
 /*

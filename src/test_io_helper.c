@@ -65,7 +65,9 @@ int main()
 	/* testfile("example_files/is_module_test/negative1.cpp"); */
 	/* testfile("example_files/is_module_test/negative2.cpp"); */
 
-	testfile("example_files/car/car.cpp");
+	/* testfile("example_files/car/car.cpp"); */
+
+	testfile("example_files/comments_test/multiline_comment_1.cpp");
 
 	return 0;
 }

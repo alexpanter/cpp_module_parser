@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "module_unit.h"
 
 #define CHECK_NULL_STR(str) ((str == NULL) ? "<null>" : str)
@@ -14,6 +15,7 @@ void module_unit_init(module_unit_t* unit)
 	unit->module_deplist = NULL;
 	unit->partition_deplist = NULL;
 	unit->header_deplist = NULL;
+	unit->line_num = 0;
 }
 
 void module_unit_free(module_unit_t* unit)
@@ -24,6 +26,7 @@ void module_unit_free(module_unit_t* unit)
 	unit->filename = NULL;
 	unit->module_name = NULL;
 	unit->partition_name = NULL;
+	unit->line_num = 0;
 
 	module_unit_deplist_t* ptr = unit->module_deplist;
 	while (ptr != NULL)
@@ -80,6 +83,37 @@ void module_unit_addimport_header(module_unit_t* unit, char* name)
 	dep->name = name;
 	dep->next = unit->header_deplist;
 	unit->header_deplist = dep;
+}
+
+
+int module_unit_imports_module(module_unit_t* unit, char* name)
+{
+	module_unit_deplist_t* ptr = unit->module_deplist;
+	while (ptr != NULL) {
+		if (strcmp(ptr->name, name) == 0) return 1;
+		ptr = ptr->next;
+	}
+	return 0;
+}
+
+int module_unit_imports_partition(module_unit_t* unit, char* name)
+{
+	module_unit_deplist_t* ptr = unit->partition_deplist;
+	while (ptr != NULL) {
+		if (strcmp(ptr->name, name) == 0) return 1;
+		ptr = ptr->next;
+	}
+	return 0;
+}
+
+int module_unit_imports_header(module_unit_t* unit, char* name)
+{
+	module_unit_deplist_t* ptr = unit->header_deplist;
+	while (ptr != NULL) {
+		if (strcmp(ptr->name, name) == 0) return 1;
+		ptr = ptr->next;
+	}
+	return 0;
 }
 
 

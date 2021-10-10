@@ -1,26 +1,23 @@
-GCC=gcc -g -std=gnu11 -Wall -Werror -pedantic
+MAKEFLAGS += --no-print-directory
+.PHONY: clean
 APP=cmop
 
-.PHONY: clean
+GCC=gcc -g -std=gnu11 -Wall -Werror -pedantic
 
-all: io_helper main
+all:
+	@cd src/ && make all
 
-$(APP): main.c
-	$(GCC) $< -o $@
+$(APP):
+	@cd src/ && make ../bin/$(APP)
 
-dependency_list: dependency_list.c dependency_list.h
-	$(GCC) -c $< -o $@.o
+test_io_reader:
+	@mkdir -p bin
+#	@cd src/ && make test_io_reader
+	@cd src/ && make ../bin/test_io_reader
 
-module_unit.o: module_unit.c module_unit.h
-	$(GCC) -c $< -o $@
-
-io_helper.o: io_helper.c io_helper.h
-	$(GCC) -c $< -o $@
-
-test_io_helper: test_io_helper.c io_helper.o module_unit.o
-	$(GCC) $< *.o -o $@
 
 clean:
+	rm -rf bin/*
 	rm -f main
 	rm -f *.o
 

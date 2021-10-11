@@ -13,4 +13,6 @@ int strhlp_ends_keyword_module(char c);
 
 char* strhlp_read_module_name(char* str, int* str_len);
 
+void strhlp_trim_away_quotations(char *);
+
 #endif // STRING_HELPER_H

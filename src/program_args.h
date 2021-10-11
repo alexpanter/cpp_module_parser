@@ -9,6 +9,12 @@ typedef struct
 	char* output;
 } program_args_t;
 
+int program_args_parse(int argc, char** argv, program_args_t* args);
+
+void program_args_init(program_args_t* args);
+void program_args_free(program_args_t* args);
+
+void program_args_print(program_args_t* args);
 
 
 #endif // PROGRAM_ARGS_H

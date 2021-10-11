@@ -6,9 +6,6 @@ BIN=../bin
 
 all: $(BIN)/test_io_reader $(BIN)/$(APP)
 
-$(BIN)/$(APP): main.c
-	$(GCC) $< -o $@
-
 $(BIN)/module_unit.o: module_unit.c module_unit.h
 	$(GCC) -c $< -o $@
 
@@ -20,9 +17,12 @@ $(BIN)/io_reader.o: io_reader.c io_reader.h
 
 objects: $(BIN)/module_unit.o $(BIN)/io_reader.o $(BIN)/string_helper.o
 
-test_io_reader: $(BIN)/test_io_reader
+#test_io_reader: $(BIN)/test_io_reader
 
 $(BIN)/test_io_reader: test_io_reader.c objects
+	$(GCC) $< $(BIN)/*.o -o $@
+
+$(BIN)/$(APP): main.c objects
 	$(GCC) $< $(BIN)/*.o -o $@
 
 clean:

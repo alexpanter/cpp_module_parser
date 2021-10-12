@@ -643,6 +643,7 @@ read_status_t read_file(char* filename, module_unit_t* unit)
 
 	// gather file data
 	unit->line_num = line_num;
+	unit->filename = strdup(filename);
 #if TEST_PRINT_ALL
 	print_file_status(&status);
 #endif

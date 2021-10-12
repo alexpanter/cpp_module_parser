@@ -144,7 +144,7 @@ void module_unit_print_deplist(module_unit_t* unit)
 
 void module_unit_debug_print(module_unit_t* unit)
 {
-	printf("--> filename: %s\n", CHECK_NULL_STR(unit->filename));
+	printf("file: %s\n", CHECK_NULL_STR(unit->filename));
 	printf("--> module-type: %s\n",
 		   get_module_type_string(unit->module_type));
 	printf("--> module-name: \"%s\"\n",

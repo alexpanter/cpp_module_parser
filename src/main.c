@@ -5,6 +5,7 @@
 #include "io_reader.h"
 #include "module_unit.h"
 #include "main_helper.h"
+#include "string_helper.h"
 
 #define CMOP_MAX_LINE_SIZE 1024
 
@@ -28,25 +29,40 @@ int main(int argc, char* argv[])
 	program_args_init(&args);
 	int parse_err = program_args_parse(argc, argv, &args);
 	if (parse_err) {
+		program_args_free(&args);
 		return 1;
 	}
 	if (args.debug_print) program_args_print(&args);
 
 	// BUILD ORDER:
-	// 1) build headers
+	// 1) parse files provided in stdin
 	// 2) build module dependency graph
-	// 3) build non-module translation units
+	// 3) generate build order
+	// 4) output build order
+	// 5) drink coffee and smile :)
 
 	// Read through files one at a time
 	char* filename = malloc(sizeof(unsigned char) * CMOP_MAX_LINE_SIZE);
 	while(scanf("%1023s[^\n]", filename) == 1)
 	{
+		if (strcmp(filename, "done;") == 0) break;
+
 		module_unit_t unit;
 		module_unit_init(&unit);
 
 		read_status_t status = read_file(filename, &unit);
 		if (status == READ_STATUS_FILE_NOT_EXISTS) {
 			print_error_no_file(filename);
+			module_unit_free(&unit);
+			free(filename);
+			program_args_free(&args);
+			return 1;
+		}
+		else if (status == READ_STATUS_INVALID_SYNTAX) {
+			print_invalid_module_syntax(filename, unit.line_num);
+			module_unit_free(&unit);
+			free(filename);
+			program_args_free(&args);
 			return 1;
 		}
 

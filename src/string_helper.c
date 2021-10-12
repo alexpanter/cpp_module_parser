@@ -1,20 +1,71 @@
 #include <string.h>
+#include <stdio.h>          // TODO: Remove this when testing done!
 #include "string_helper.h"
 
 
-int string_helper_is_whitespace(char c)
+int strhlp_is_whitespace(char c)
 {
 	switch (c)
 	{
 	case ' ':
 	case '\t':
+	case '\r':
+	case '\n':
 		return 1;
 	default:
 		return 0;
 	}
 }
 
-int string_helper_ends_word(char c)
+int strhlp_is_newline(char c)
+{
+	switch (c)
+	{
+	case '\n':
+	case '\r':
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+int strhlp_is_quotation(char c)
+{
+	switch (c)
+	{
+	case '\"':
+	case '\'':
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+int strhlp_is_anglebracket(char c)
+{
+	switch (c)
+	{
+	case '<':
+	case '>':
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+
+int strhlp_is_whitespace_or_quotation(char c)
+{
+	return strhlp_is_whitespace(c) || strhlp_is_quotation(c);
+}
+
+int strhlp_is_whitespace_or_anglebracket(char c)
+{
+	return strhlp_is_whitespace(c) || strhlp_is_anglebracket(c);
+}
+
+
+int strhlp_ends_word(char c)
 {
 	// TODO: Inverse check would be better!
 	switch (c)
@@ -35,29 +86,18 @@ int string_helper_ends_word(char c)
 	}
 }
 
-int get_symbol_length(char* str)
+int strhlp_get_symbol_length(char* str)
 {
 	char* ptr = str;
 	int cnt = 0;
 
-	while (!string_helper_ends_word(*ptr))
+	while (!strhlp_ends_word(*ptr))
 	{
 		ptr++;
 	}
 	return cnt;
 }
 
-int strhlp_is_line_terminator(char c)
-{
-	switch (c)
-	{
-	case '\n':
-	case '\r':
-		return 1;
-	default:
-		return 0;
-	}
-}
 
 
 int strhlp_ends_keyword_export(char c)
@@ -85,6 +125,8 @@ int strhlp_ends_keyword_import(char c)
 	case ' ':
 	case ';':
 	case ':':
+	case '>':
+	case '\"':
 		return 1;
 	default:
 		return 0;
@@ -115,7 +157,9 @@ char* strhlp_read_module_name(char* str, int* str_len)
 	{
 		char c = *ptr;
 		// is alpha-numerical, dot, or underscore, respectively
-		if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c < 59) || c == 46 || c == 95) {
+		// TODO: Could this be done more efficiently?
+		if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122) || (c >= 48 && c < 59) ||
+			c == 46 || c == 95) {
 			len++;
 			ptr++;
 			continue;
@@ -127,5 +171,32 @@ char* strhlp_read_module_name(char* str, int* str_len)
 		else {
 			return NULL;
 		}
+	}
+}
+
+
+void strhlp_trim_front_back(char* str, int(*trim_func)(char))
+{
+	// search for beginning of string
+	int start_pos = 0;
+	while (trim_func(str[start_pos]))
+	{
+		start_pos++;
+	}
+
+	// now move the entire string backwards
+	int i1, i2;
+	int moves = 0;
+	for (i1 = 0, i2 = start_pos; str[i2] != '\0'; i1++, i2++, moves++)
+	{
+		str[i1] = str[i2];
+	}
+
+	// lastly, trim from the end
+	i2 -= 1;
+	while (trim_func(str[i2]) || i2 >= i1)
+	{
+		str[i2] = '\0';
+		i2 -= 1;
 	}
 }

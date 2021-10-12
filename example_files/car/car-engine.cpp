@@ -13,6 +13,9 @@ export namespace car
 		{
 			return 42;
 		}
-		const char*
+		const char* getDescription()
+		{
+			return "engine { hp: 42 }";
+		}
 	}
 }

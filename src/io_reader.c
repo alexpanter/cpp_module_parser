@@ -35,6 +35,15 @@ typedef enum
 	KEYWORD_SYMBOL
 } keyword_t;
 
+// TODO: We might care about the difference at some point,
+// so we take them into account atm. and leave a note about it here.
+typedef enum
+{
+	HEADER_TYPE_NOT_A_HEADER,
+	HEADER_TYPE_LOCAL_HEADER,   // import "header"
+	HEADER_TYPE_GLOBAL_HEADER   // import <header>
+} header_type_t;
+
 typedef enum
 {
 	MODULE_LINE_INVALID_SYNTAX,
@@ -162,10 +171,11 @@ static keyword_t end_multiline_comment(char** read_ptr)
 	*read_ptr = ptr;
 }
 
+
 static keyword_t read_keyword(char** read_ptr)
 {
 	char* ptr = *read_ptr;
-	while (string_helper_is_whitespace(*ptr)) {
+	while (strhlp_is_whitespace(*ptr)) {
 		ptr++;
 	}
 	*read_ptr = ptr;
@@ -224,14 +234,6 @@ static keyword_t read_keyword(char** read_ptr)
 }
 
 
-/*
-typedef enum
-{
-MACRO_LINE_UNFINISHED,
-MACRO_LINE_FINISHED
-} macro_line_t;
-*/
-
 static macro_line_t read_macro_line(char** read_ptr)
 {
 	// If one found, macro continues to next line, but only when it's the
@@ -242,7 +244,7 @@ static macro_line_t read_macro_line(char** read_ptr)
 
 	while (*ptr != '\0')
 	{
-		if (strhlp_is_line_terminator(*ptr) || *ptr == ' ') {}
+		if (strhlp_is_newline(*ptr) || *ptr == ' ') {}
 		else if (*ptr == '\\') { has_backslash = 1; }
 		else { has_backslash = 0; }
 		ptr++;
@@ -251,6 +253,7 @@ static macro_line_t read_macro_line(char** read_ptr)
 	if (has_backslash) return MACRO_LINE_UNFINISHED;
 	else return MACRO_LINE_FINISHED;
 }
+
 
 static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 									  module_unit_t* unit, file_status_t* status)
@@ -266,6 +269,9 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 	const int max_line_symbols = 2;
 	char* symbols[max_line_symbols];
 	for (int i = 0; i < max_line_symbols; i++) symbols[i] = NULL;
+
+	header_type_t headers[max_line_symbols];
+	for (int i = 0; i < max_line_symbols; i++) headers[i] = HEADER_TYPE_NOT_A_HEADER;
 
 	int keyword_pos = 1;
 	int symbol_pos = 0;
@@ -339,10 +345,27 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 			if (symbol_pos >= max_line_symbols) {
 				return MODULE_LINE_INVALID_SYNTAX;
 			}
+
+			switch ((*read_ptr)[0]) {
+			case '<':
+				headers[symbol_pos] = HEADER_TYPE_GLOBAL_HEADER;
+				(*read_ptr)++;
+				break;
+			case '\"':
+				headers[symbol_pos] = HEADER_TYPE_LOCAL_HEADER;
+				(*read_ptr)++;
+				break;
+			default:
+				break;
+			}
+
 			int len;
 			char* symbol = strhlp_read_module_name(*read_ptr, &len);
 			if (symbol == NULL) {
 				return MODULE_LINE_INVALID_SYNTAX;
+			}
+			if (headers[symbol_pos] != HEADER_TYPE_NOT_A_HEADER) {
+				len += 1; // account for '\"' or '>' following header name
 			}
 			symbols[symbol_pos++] = symbol;
 			keywords[keyword_pos++] = KEYWORD_SYMBOL;
@@ -368,6 +391,8 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 #endif
 
 	// gather line data
+
+	// "export ..."
 	if (keywords[0] == KEYWORD_EXPORT) {
 		// "export module ..."
 		if (keyword_pos >= 3 && keywords[1] == KEYWORD_MODULE &&
@@ -424,6 +449,7 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 			return MODULE_LINE_EXPORT;
 		}
 	}
+	// "import ..."
 	else if (keywords[0] == KEYWORD_IMPORT) {
 		// "import : <symbol> ;"
 		if (keyword_pos >= 4 && keywords[1] == KEYWORD_COLON &&
@@ -435,9 +461,17 @@ static module_line_t read_module_line(keyword_t start_keyword, char** read_ptr,
 		// "import <symbol> ;"
 		else if (keyword_pos >= 3 && keywords[1] == KEYWORD_SYMBOL &&
 				 keywords[2] == KEYWORD_SEMICOLON && symbol_pos >= 1) {
-			// TODO: Determine if we import module or header!
-			module_unit_addimport_module(unit, symbols[0]);
-			return MODULE_LINE_IMPORT_PARTITION;
+			// import is another module
+			if (headers[0] == HEADER_TYPE_NOT_A_HEADER) {
+				module_unit_addimport_module(unit, symbols[0]);
+				return MODULE_LINE_IMPORT_MODULE;
+			}
+			// import is a header
+			// TODO: Here we may distinguish btw. local/global header import!
+			else {
+				module_unit_addimport_header(unit, symbols[0]);
+				return MODULE_LINE_IMPORT_HEADER;
+			}
 		}
 		else {
 			return MODULE_LINE_INVALID_SYNTAX;
@@ -486,6 +520,9 @@ static void read_line(char* line, module_unit_t* unit, file_status_t* status)
 		keyword_t ml_status = end_multiline_comment(&read_ptr);
 		if (ml_status == KEYWORD_ENDLINE) {
 			return;
+		}
+		else {
+			status->multiline_comment = 0;
 		}
 	}
 	if (status->multiline_macro) {
@@ -554,12 +591,17 @@ static void read_line(char* line, module_unit_t* unit, file_status_t* status)
 			case MODULE_LINE_INVALID_SYNTAX:
 				// We encountered a syntax error in a module line.
 				// The entire file will be considered invalid.
-				printf("--> MODULE_LINE_INVALID_SYNTAX\n");
+#if TEST_PRINT_ALL
+				printf("MODULE_LINE_INVALID_SYNTAX\n");
 				printf("line: %s", line);
+#endif
 				status->module_read_error = 1;
 				return;
 			case MODULE_LINE_DUPLICATE_DEFINITION:
-				printf("--> MODULE_LINE_DUPLICATE_DEFINITION\n");
+#if TEST_PRINT_ALL
+				printf("MODULE_LINE_DUPLICATE_DEFINITION\n");
+				printf("line: %s", line);
+#endif
 				status->duplicate_definition_error = 1;
 				return;
 
@@ -586,8 +628,7 @@ static void read_line(char* line, module_unit_t* unit, file_status_t* status)
 				return;
 			case MODULE_LINE_IMPORT_HEADER:
 			default:
-				printf("read_line: MODULE_LINE_IMPORT_HEADER not implemented!\n");
-				exit(1);
+				return;
 			}
 			break;
 
@@ -648,16 +689,20 @@ read_status_t read_file(char* filename, module_unit_t* unit)
 	print_file_status(&status);
 #endif
 	if (status.module_read_error) {
+		unit->module_type = MODULE_TYPE_INVALID;
 		return READ_STATUS_INVALID_SYNTAX;
 	}
 	else if (status.duplicate_definition_error) {
+		unit->module_type = MODULE_TYPE_INVALID;
 		return READ_STATUS_DUPLICATE_DEFINITION;
 	}
 	else if (status.has_global_module_fragment && !status.has_module_declaration) {
+		unit->module_type = MODULE_TYPE_INVALID;
 		return READ_STATUS_INVALID_SYNTAX;
 	}
 	else if ((status.has_export_declaration || status.has_export_import_declaration)
 			 && !status.has_module_declaration) {
+		unit->module_type = MODULE_TYPE_INVALID;
 		return READ_STATUS_INVALID_SYNTAX;
 	}
 	else if (status.has_module_declaration) {

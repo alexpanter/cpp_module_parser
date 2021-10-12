@@ -181,7 +181,7 @@ void is_module_test_negative_1()
 void is_module_test_invalid_1()
 {
 	expected_t exp = {
-		READ_STATUS_INVALID_SYNTAX, MODULE_TYPE_UNDETERMINED,
+		READ_STATUS_INVALID_SYNTAX, MODULE_TYPE_INVALID,
 		NULL, NULL,
 		NULL, NULL, NULL
 	};
@@ -191,7 +191,7 @@ void is_module_test_invalid_1()
 void is_module_test_invalid_2()
 {
 	expected_t exp = {
-		READ_STATUS_INVALID_SYNTAX, MODULE_TYPE_UNDETERMINED,
+		READ_STATUS_INVALID_SYNTAX, MODULE_TYPE_INVALID,
 		NULL, NULL,
 		NULL, NULL, NULL
 	};
@@ -201,7 +201,7 @@ void is_module_test_invalid_2()
 void is_module_test_invalid_3()
 {
 	expected_t exp = {
-		READ_STATUS_INVALID_SYNTAX, MODULE_TYPE_UNDETERMINED,
+		READ_STATUS_INVALID_SYNTAX, MODULE_TYPE_INVALID,
 		NULL, NULL,
 		NULL, NULL, NULL
 	};

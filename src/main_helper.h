@@ -16,8 +16,9 @@ void print_cyclic_dependency() {
 	print_failed_to_build();
 }
 
-void print_invalid_module_syntax() {
-	fprintf(stderr, "Invalid module syntax. ");
+void print_invalid_module_syntax(const char* filename, unsigned long line_num) {
+	fprintf(stderr, "Error encountered in file %s:\n", filename);
+	fprintf(stderr, "Invalid module syntax at line %lu. ", line_num);
 	print_failed_to_build();
 }
 

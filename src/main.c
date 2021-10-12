@@ -68,6 +68,9 @@ int main(int argc, char* argv[])
 
 		// File exists, and it was parsed.
 		// If file is a module unit place it in the dependency graph.
+		// An argument can be made against this, since one of the next files
+		// may fail the syntax checker, and updating the dependency graph is
+		// likely an expensive operation.
 
 		if (args.debug_print) module_unit_debug_print(&unit);
 		module_unit_free(&unit);

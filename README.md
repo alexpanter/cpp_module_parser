@@ -189,6 +189,82 @@ not by implementors of this or similar tools).
 
 This project is still work in progress, and an interface has yet to be declared.
 
+## Preliminary example build ##
+
+Currently, the program can be run with a test file (assuming Linux bash terminal):
+
+```
+echo example_files/large_module_unit.cpp | bin/cmop --output=terminal --debug-print
+```
+
+The testfile "example_files/large_module_unit.cpp" looks like this:
+
+```cpp
+module;
+
+#ifndef NDEBUG
+#define NDEBUG
+#endif
+
+#include <assert.h>
+#include <sys/socket.h>
+
+#define MAX(a, b) ((a > b) ? a : b)
+#define SPECIAL_VALUE 42
+
+#define MACRO_FUNCTION(x) ((x > 42)	\
+                           ? "x is larger than 42"	\
+                           : "x is not larger than 42")
+
+export module large_module.unit : partition_1;
+
+import <iostream>;
+import <thread>;
+import <vector>;
+
+import "some_header_1.hpp";
+import "some_header_2.hpp";
+
+import large_module.other_unit;
+import large_module.common_unit;
+
+import :partition_2;
+import :partition_3;
+
+export
+{
+	int add(int a, int b) { return a + b; }
+}
+
+```
+
+The tool will generate the following output:
+
+```
+program_args:
+--> compiler=(null)
+--> compiler_flags=(null)
+--> file=(null)
+--> output_format=OUTPUT_FORMAT_TERMINAL
+--> debug_print=<true>
+file: example_files/large_module_unit.cpp
+--> module-type: MODULE_TYPE_PARTITION
+--> module-name: "large_module.unit"
+--> partition-name: "partition_1"
+--> dependencies:
+----> [MODULE] "large_module.common_unit"
+----> [MODULE] "large_module.other_unit"
+----> [PARTITION] "partition_3"
+----> [PARTITION] "partition_2"
+----> [HEADER] "some_header_2.hpp"
+----> [HEADER] "some_header_1.hpp"
+----> [HEADER] "vector"
+----> [HEADER] "thread"
+----> [HEADER] "iostream"
+```
+
+TODO: Next step is to create a dependency graph and parse that to generate build commands.
+
 
 ## License ##
 

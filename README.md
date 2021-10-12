@@ -1,4 +1,4 @@
-# cpp_module_parser #
+# cpp_module_parser [cmop] #
 
 A tool for generating build scripts for C++20 projects that use modules.
 
@@ -51,13 +51,13 @@ building C++ projects.
 
 ## What are modules ##
 
-We have 5 different kind of "file types" with C++20:
+With C++20 we have 5 different kinds of "file type":
 
-* Regular header files
-* Header units
-* Regular source files
-* Module units
-* Module partition units
+* Regular header file
+* Header unit
+* Regular source file
+* Module unit
+* Module partition unit
 
 Regular header files and source files have not changed from earlier versions of C++.
 A header unit is the same as a header file, except that it has been compiled into a
@@ -65,8 +65,8 @@ header unit (BMI) and may be `import`'ed by all other file types. This is the
 difference:
 
 ```cpp
-#include <iostream>       // regular header file
-import <iostream>;        // header unit
+#include <iostream>       // regular header file -> preprocessor copy/paste
+import <iostream>;        // header unit -> reference to precompiled header file
 ```
 
 Module units are source files that declare a module with either `export module name;`
@@ -200,6 +200,24 @@ echo example_files/large_module_unit.cpp | bin/cmop --output=terminal --debug-pr
 The testfile "example_files/large_module_unit.cpp" looks like this:
 
 ```cpp
+/*
+ * This is an example of a module partition unit.
+ *
+ * The first section of the file is know as the
+ * "global module fragment", and can be recognized by the
+ * `module;` declaration.
+ *
+ * Inside that section only preprocessor directives may appear.
+ *
+ * The global module fragment ends at the module declaration,
+ * which begins with the keywords `export module`. The colon :
+ * signifies this module unit to be a module partition.
+ *
+ * Module processing ends with the first `export` declaration,
+ * which in this example is followed by a scope in which all
+ * definitions are considered part of the interface for this
+ * module unit.
+ */
 module;
 
 #ifndef NDEBUG

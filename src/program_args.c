@@ -2,6 +2,7 @@
 #include "string_helper.h"
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int program_args_parse(int argc, char** argv, program_args_t* args)
 {
@@ -20,7 +21,7 @@ int program_args_parse(int argc, char** argv, program_args_t* args)
             args->compiler = strdup(arg);
             continue;
         }
-        else if (sscanf(argv[i], "--compiler-flags=%255s") == 0) {
+        else if (sscanf(argv[i], "--compiler-flags=%255s", arg) == 0) {
             if (args->compiler_flags != NULL) free(args->compiler_flags);
             args->compiler_flags = strdup(arg);
             continue;
@@ -36,7 +37,7 @@ int program_args_parse(int argc, char** argv, program_args_t* args)
 void program_args_init(program_args_t* args)
 {
     if (args->compiler != NULL) free(args->compiler);
-    if (arsg->compiler_flags != NULL) free (args->compiler_flags);
+    if (args->compiler_flags != NULL) free (args->compiler_flags);
     if (args->file != NULL) free(args->file);
     args->compiler = NULL;
     args->compiler_flags = NULL;

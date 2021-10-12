@@ -1,23 +1,18 @@
 MAKEFLAGS += --no-print-directory
-.PHONY: clean
+.PHONY: clean bindir
 APP=cmop
 
-GCC=gcc -g -std=gnu11 -Wall -Werror -pedantic
-
-all:
+all: bindir
 	@cd src/ && make all
 
-$(APP):
+bindir:
+	@mkdir -p bin
+
+$(APP): bindir
 	@cd src/ && make ../bin/$(APP)
 
-test_io_reader:
-	@mkdir -p bin
-#	@cd src/ && make test_io_reader
+test_io_reader: bindir
 	@cd src/ && make ../bin/test_io_reader
 
-
 clean:
-	rm -rf bin/*
-	rm -f main
-	rm -f *.o
-
+	rm -rf bin/

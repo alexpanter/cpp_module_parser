@@ -6,7 +6,7 @@ typedef struct
 	char* files_pattern;
 	char* compiler;
 	char* compiler_flags;
-	char* output;
+	char* file;
 } program_args_t;
 
 int program_args_parse(int argc, char** argv, program_args_t* args);
